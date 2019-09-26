@@ -1,3 +1,33 @@
+# Tic Tac Toe
+
+A Node.js tic-tac-toe server and client using WebSockets.
+
+## Getting Started
+
+To run the server, install Node.js and run the following command:
+
+**Example**  
+```js
+$ node server.js
+
+//Optionally, to run in debug mode use the following command:
+$ node server.js -debug
+
+```
+
+To play the game from the console, run the following command and follow the instructions:
+
+**Example**  
+```js
+$ node client.js
+
+//Optionally, to run in debug mode use the following command:
+$ node client.js -debug
+
+```
+
+To play the game using the browser run browser-client.html
+
 ## Classes
 
 <dl>
@@ -9,6 +39,15 @@
 </dd>
 <dt><a href="#Board">Board</a></dt>
 <dd><p>TicTacToe Board class</p>
+</dd>
+</dl>
+
+<dl>
+<dt><a href="#Client">Client</a></dt>
+<dd><p>TicTacToe Client class</p>
+</dd>
+<dt><a href="#Player">Player</a></dt>
+<dd><p>TicTacToe Player class</p>
 </dd>
 </dl>
 
@@ -38,14 +77,6 @@ Server class constructor
 | address | <code>string</code> | server ip or url, if null the default value is 127.0.0.1 |
 | port | <code>string</code> | port number to server the connection. If null the default port is set to 1337.. |
 
-**Example**  
-```js
-To run the server, install nodejs and run the following command
-node server.js
-Optionally, to run in debug mode use the following command:
-node server.js -debug
-To play the game using the browser run browser-client.html
-```
 <a name="Server+sessionID"></a>
 
 ### server.sessionID() ⇒ <code>string</code>
@@ -321,18 +352,230 @@ Sets an empty state and resets moves.
 **Kind**: instance method of [<code>Board</code>](#Board)  
 
 
-## Classes
-
-<dl>
-<dt><a href="#Client">Client</a></dt>
-<dd><p>TicTacToe Client class</p>
-</dd>
-<dt><a href="#Player">Player</a></dt>
-<dd><p>TicTacToe Player class</p>
-</dd>
-</dl>
-
 <a name="Client"></a>
+
+## Client
+TicTacToe Client class
+
+**Kind**: global class  
+
+* [Client](#Client)
+    * [new Client(string, string)](#new_Client_new)
+    * [.init()](#Client+init)
+    * [.clear()](#Client+clear)
+    * [.write()](#Client+write)
+    * [.prompt(ctx)](#Client+prompt)
+    * [.read(data)](#Client+read)
+    * [.start()](#Client+start)
+    * [.keyEvent(str, key)](#Client+keyEvent)
+    * [.emptyState()](#Client+emptyState)
+    * [.println()](#Client+println)
+    * [.print(help)](#Client+print)
+    * [.help(name)](#Client+help)
+    * [.getKey(index, help)](#Client+getKey)
+    * [.error(err)](#Client+error)
+    * [.heartBeat()](#Client+heartBeat)
+    * [.close()](#Client+close)
+    * [.setDebugMode()](#Client+setDebugMode)
+
+<a name="new_Client_new"></a>
+
+### new Client(string, string)
+A Client class that establishes a websocket connection to server when initialised.
+
+**Returns**: <code>Object</code> - client object and methods.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| string | <code>address</code> | server ip or url, if null the default value is 127.0.0.1 |
+| string | <code>port</code> | port number to establish the connection. If null the default port is set to 1337. |
+
+<a name="Client+init"></a>
+
+### client.init()
+Initialises cli after a successfull server connection
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+clear"></a>
+
+### client.clear()
+clears the console
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+write"></a>
+
+### client.write()
+Stringify messages and emit them to server
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+prompt"></a>
+
+### client.prompt(ctx)
+Called whenever a prompt request from the server is made.
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ctx | <code>Object</code> | A valid prompt object from the server |
+
+<a name="Client+read"></a>
+
+### client.read(data)
+Called whenever a new message is sent from the server
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>string</code> | data in json format sent from the server |
+
+<a name="Client+start"></a>
+
+### client.start()
+Clears the screen, sets an empty state and starts a new game
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+keyEvent"></a>
+
+### client.keyEvent(str, key)
+Key board input event handler thats acts as a game console to emit inputs to the server
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| str | <code>string</code> | input value |
+| key | <code>Object</code> | key details |
+
+<a name="Client+emptyState"></a>
+
+### client.emptyState()
+Reset the state and moves of the game
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+println"></a>
+
+### client.println()
+Consolidated log handler for common massages
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+print"></a>
+
+### client.print(help)
+Draws Tic Tac Toe on the console and prints out instructions if help is true
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| help | <code>bool</code> | prints help keys |
+
+<a name="Client+help"></a>
+
+### client.help(name)
+prints playing instruction
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | the name of the player |
+
+<a name="Client+getKey"></a>
+
+### client.getKey(index, help)
+returns the correct keys to be displayed on the console
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>number</code> | index from 0 to 8 |
+| help | <code>bool</code> | prints out intructions |
+
+<a name="Client+error"></a>
+
+### client.error(err)
+Websocket client error handler, exits upon error
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| err | <code>Object</code> | connecion error |
+
+<a name="Client+heartBeat"></a>
+
+### client.heartBeat()
+Monitors connection to the remote server and terminates connections if broken
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+close"></a>
+
+### client.close()
+Clears the interval and exists the game
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Client+setDebugMode"></a>
+
+### client.setDebugMode()
+runs the client in debug mode
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+<a name="Player"></a>
+
+## Player
+TicTacToe Player class
+
+**Kind**: global class  
+
+* [Player](#Player)
+    * [new Player(string)](#new_Player_new)
+    * [.getSymbol()](#Player+getSymbol) ⇒ <code>string</code>
+    * [.incScore()](#Player+incScore)
+    * [.getScore()](#Player+getScore) ⇒ <code>number</code>
+    * [.meta()](#Player+meta) ⇒ <code>string</code>
+
+<a name="new_Player_new"></a>
+
+### new Player(string)
+Player class to handle different players
+
+**Returns**: <code>Object</code> - A player object to be used with the Client class  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| string | <code>player</code> | a symbol to used for the play, the default is "X". |
+
+<a name="Player+getSymbol"></a>
+
+### player.getSymbol() ⇒ <code>string</code>
+Gets the players symbol
+
+**Kind**: instance method of [<code>Player</code>](#Player)  
+**Returns**: <code>string</code> - "X" or "O"  
+<a name="Player+incScore"></a>
+
+### player.incScore()
+Increments the players score
+
+**Kind**: instance method of [<code>Player</code>](#Player)  
+<a name="Player+getScore"></a>
+
+### player.getScore() ⇒ <code>number</code>
+Return the players score
+
+**Kind**: instance method of [<code>Player</code>](#Player)  
+**Returns**: <code>number</code> - current score  
+<a name="Player+meta"></a>
+
+### player.meta() ⇒ <code>string</code>
+Return the players formated score and symbol
+
+**Kind**: instance method of [<code>Player</code>](#Player)  
+**Returns**: <code>string</code> - current score  
+
 
 ## Client
 TicTacToe Client class
@@ -372,7 +615,7 @@ A Client class that establishes a websocket connection to server when initialise
 
 **Example**  
 ```js
-To play the game from the console, install nodejs and run the following command:
+To play the game from the console, install Node.js and run the following command:
 node client.js
 Optionally, to run in debug mode use the following command:
 node client.js -debug
@@ -563,3 +806,8 @@ Return the players formated score and symbol
 
 **Kind**: instance method of [<code>Player</code>](#Player)  
 **Returns**: <code>string</code> - current score  
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details

@@ -1,0 +1,18 @@
+{
+  "name": "tic-tac-toe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "tic tac toe",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "author": "jean-lux",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^7.1.2"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tic Tac Toe</title>
+</head>
+
+<body>
+    <tic-tac  address="127.0.0.1" port="1337" debug="true"></tic-tac>
+    <script>
+        class TicTac extends HTMLElement {
+            constructor() {
+                super();
+            }
+            get template() {
+                return `
+              <h1>Tic Tac Toe</h1>
+              <div class="row">
+                  <div class="slot">O</div>
+                  <div class="slot"></div>
+                  <div class="slot">X</div>
+              </div>
+              <div class="row">
+                  <div class="slot"></div>
+                  <div class="slot"></div>
+                  <div class="slot"></div>
+              </div>
+              <div class="row">
+                  <div class="slot"></div>
+                  <div class="slot"></div>
+                  <div class="slot"></div>
+              </div>
+              <div class="options"></div>
+              <div class="auth">
+                  <input type="text" class="name" placeholder="What your name ?" />
+                  <button class="start"> Start </button>
+              </div>
+              `
+            }
+            get styles() {
+                return `<style>
+                body {
+                    background: #526ad0;
+                    display: flex;
+                    font-family: sans-serif;
+                }
+                h1{
+                    font-size: 23px;
+                    color: #293565;
+                    text-align: center;
+                    font-weight: 600;
+                }
+                *:focus {
+                    outline: none;
+                }
+                tic-tac {
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    margin-top: 50px;
+                    position:relative;
+                }
+
+                .row {
+                    border-bottom: solid 2px #526ad0;
+                    display: flex;
+                }
+
+                .slot {
+                    background: rgba(6, 15, 56, 0.3686274509803922);
+                    display: flex;
+                    padding: 20px;
+                    border-right: solid 2px #526ad0;
+                    cursor: pointer;
+                    transition: all .4s;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 30px;
+                    font-family: sans-serif;
+                    color: rgba(218, 222, 241, 0.6313725490196078);
+                    width: 5vw;
+                    height: 5vw;
+                }
+
+                .slot:hover {
+                    background: rgba(38, 59, 146, 0.54);
+                }
+
+                .auth {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    display: flex;
+                    justify-content: center;
+                    bottom: 0;
+                    top: 0;
+                    flex-direction: column;
+                    padding: 10px;
+                    background: #526ad0;
+                    font-family: sans-serif;
+                    color: #fff;
+                }
+                .auth input {
+                    padding: 10px;
+                    border: unset;
+                    margin-bottom: 10px;
+                    color: #2a2a46;
+                    background: rgba(255, 255, 255, 0.5686274509803921);
+                    border-radius: 2px;
+                    min-height: 1.3vw;
+                }
+                button {
+                    padding: 10px;
+                    border: unset;
+                    background: #364998;
+                    border-radius: 2px;
+                    color: #ffffff99;
+                    cursor: pointer;
+                    font-weight: 600;
+                    min-height: 2.5vw;
+                    transition: all .4s;
+                }
+                button:hover{
+                    background: rgba(38, 59, 146, 0.54);
+                }
+                .options{
+                    padding: 20px 0;
+                    font-weight: 600;
+                    color: #ffffffa1;
+                }
+                .restart {
+                    display: flex;
+                    flex-direction: column;
+                    font-weight: normal;
+                }
+                .restart span{
+                    padding-bottom:10px;
+                    font-size: 14px;
+                }
+
+                }
+                </style>`
+            }
+            setNotice(msg, err){
+                this._options.innerHTML = `<div class="notice ${err==true?"error":""}">${msg} </div>`
+            }
+            restartOption(msg){
+                this._options.innerHTML = `<div class="restart">
+                <span>${msg}</span>
+                <button>Play again</button>
+                </div>`
+                let restart = this.querySelector(".restart button").addEventListener("click", e => {
+                    if(!this._connected) return
+                    this._options.innerHTML = ""
+                    this.start()
+                    this.waiting = false
+                })
+            }
+            connectedCallback() {
+                this.innerHTML = this.template.trim().concat(this.styles.trim())
+                this.state = ["X", 1, 2, 3, "O", 5, 6, 7, 8]
+                this.player = "X"
+                this.opponent = "O"
+                this.moves = 0
+                this.init()
+                this.setSlots()
+            }
+            init(){
+                this._address = this.getAttribute("address") || "127.0.0.1"
+                this._port = this.getAttribute("port") || "1337"
+                this.socket = new WebSocket(`ws://${this._address}:${this._port}`)
+                this.socket.addEventListener("open", this.open.bind(this))
+                this.socket.addEventListener("message", this.read.bind(this))
+                this.socket.addEventListener("close", this.close.bind(this))
+                this.socket.addEventListener("error", this.close.bind(this))
+                // auth
+                this._auth = document.querySelector(".auth")
+                this._name = document.querySelector(".name")
+                this._start = document.querySelector(".start")
+                this._start.addEventListener("click", e => {
+                    if(!this._connected) return this.close()
+                    this._auth.style.display = "none"
+                    this.name = this._name.value || "anonymous"
+                    this.emit({
+                        prompt:{
+                            key:"name",
+                            response: this.name,
+                        }
+                    })
+                })
+                //options
+                this._options = document.querySelector(".options")
+                //debug mode
+                this._debug = this.getAttribute("debug") || false
+            }
+            slotEvent(e) {
+                // called whenever a player makes a move
+                if(this.waiting) return
+                let i = e.target.getAttribute("data-key")
+                this.emit({
+                    playEvent: {
+                        key: i,
+                        symbol: this.player,
+                        opponent: this.opponent,
+                        state: this.state,
+                        moves: this.moves,
+                    }
+                })
+                this.waiting = true
+            }
+            setSlots() {
+                // called once during initialisation
+                // set slot events and handler
+                let i = 0
+                this._slots = this.querySelectorAll(".slot")
+                this._slots.forEach(el => {
+                    el.setAttribute("data-key", i)
+                    el.addEventListener("click", this.slotEvent.bind(this))
+                    i++
+                })
+            }
+            print() {
+                // called  whenever a new move is made
+                // draws the board and sets the correct moves
+                for (let i = 0; i < 9; i++) {
+                    let key = this.state[i]
+                    if(Number.isInteger(parseInt(key))){
+                        key = " "
+                    }
+                    this._slots[i].innerHTML = key
+                }
+            }
+            emit(ctx) {
+                // consolidated emitter of messages to the servers
+                // encodes data to server
+               this.socket.send(JSON.stringify(ctx))
+            }
+            open() {
+                // called whenever a new connection is established
+                this._connected = true
+                if(this._debug) console.log("connected")
+            }
+            read(e) {
+                // called whenever a message is sent from the server
+                this.waiting = false
+                if(this._debug) console.log("read data :", e.data)
+                let ctx = JSON.parse(e.data)
+                if(ctx.state){
+                    this.state = ctx.state
+                    this.print()
+                }
+                if(ctx.exception){
+                    alert(ctx.exception)
+                } else if(ctx.prompt){
+                    return this.prompt(ctx.prompt)
+                }
+
+                this.moves = ctx.moves || 0
+            }
+            close(err){
+                //called whenever a connection is lost
+                alert("Could not establish connection to server.")
+            }
+            prompt(ctx) {
+                // handles prompt messages from the server
+                if(ctx.key == "help"){
+                    this.emit({
+                        prompt:{
+                            key:"help",
+                            response:true,
+                        }
+                    })
+                } else if(ctx.key == "start"){
+                    return this.start()
+                } else if(ctx.key == "win"){
+                    this.waiting = true
+                    this.restartOption(`${ctx.winner== "O" ? "Your opponent has won": "You have won the game."}, would you like to play again?`)
+                } else if(ctx.key == "tie"){
+                    this.waiting = true
+                    this.restartOption(`Its a draw, would you like try me again?`)
+                }
+            }
+            start() {
+                // resets the game locally and re-draws the board
+                if(!this._connected) return
+                this.emptyState()
+                this.print()
+            }
+            emptyState() {
+                // resets the state and number of moves locally
+                this.state = [0,1,2,3,4,5,6,7,8]
+                this.moves = 0
+            }
+        }
+        customElements.define("tic-tac", TicTac);
+    </script>
+</body>
+
+</html>
